@@ -1,0 +1,20 @@
+# Node / Svelte
+node_modules/
+frontend/dist/
+*.local
+
+# Rust
+proxy/target/
+
+# Config & secrets
+.env
+.env.*
+!.env.example
+
+# Cache disque du proxy
+cache/
+
+# OS / éditeurs
+.DS_Store
+.idea/
+.vscode/
