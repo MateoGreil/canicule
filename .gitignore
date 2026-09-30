@@ -1,9 +1,13 @@
 # Node / Svelte
 node_modules/
 frontend/dist/
+frontend/test-results/
+frontend/playwright-report/
+proxy/static/assets/
 *.local
 
 # Rust
+/target/
 proxy/target/
 
 # Config & secrets
