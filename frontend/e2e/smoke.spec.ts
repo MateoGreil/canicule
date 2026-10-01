@@ -19,6 +19,8 @@ test('the map renders and changing sport updates tile requests and URL hash', as
   await mockApi(page)
   await page.goto('/')
   await expect(page.locator('canvas.maplibregl-canvas')).toBeVisible()
+  const mapBox = await page.locator('.map').boundingBox()
+  expect(mapBox?.height).toBe(page.viewportSize()?.height)
   await expect(page.getByText('Low resolution · zoom 11 max')).toBeVisible()
   const nextTile = page.waitForRequest((request) => request.url().includes('/api/tiles/run/'))
   await page.getByLabel('Sport').selectOption('run')
