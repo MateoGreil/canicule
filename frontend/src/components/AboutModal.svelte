@@ -16,7 +16,7 @@
     </header>
     <p>canicule is a self-hostable viewer for Strava's Global Heatmap. You can explore the public heatmap without a Strava account.</p>
     <p>Anonymous mode shows the heatmap up to zoom 11. Self-hosters can set <code>STRAVA_SESSION_COOKIE</code> on the server to enable high-resolution tiles up to zoom 15. The session cookie is never sent to visitors.</p>
-    <p>Map data © OpenStreetMap contributors · basemap © CARTO · heatmap © Strava. Please respect Strava's terms of use: no bulk scraping, personal and small-scale use only.</p>
+    <p>Map data © OpenStreetMap contributors · basemap © OpenFreeMap · heatmap © Strava. Please respect Strava's terms of use: no bulk scraping, personal and small-scale use only.</p>
     <p><a href="https://git.greil.fr/mat/canicule" target="_blank" rel="noopener noreferrer">Source code and setup instructions</a></p>
   </div>
 </dialog>

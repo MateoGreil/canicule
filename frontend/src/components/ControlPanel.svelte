@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { AppConfig } from '../lib/config'
+  import { BASEMAPS } from '../lib/basemap'
   import type { ViewState } from '../lib/state.svelte'
 
   let { config, view }: { config: AppConfig; view: ViewState } = $props()
@@ -13,7 +14,7 @@
   }
 </script>
 
-<section class="panel" class:dark={view.basemap === 'dark_matter'} aria-label="Heatmap controls">
+<section class="panel" class:dark={BASEMAPS[view.basemap].theme === 'dark'} aria-label="Heatmap controls">
   <header>
     <h1>canicule <span aria-hidden="true">🔥</span></h1>
     <button class="toggle" type="button" aria-label="Toggle controls" aria-expanded={expanded} onclick={() => expanded = !expanded}>{expanded ? '−' : '+'}</button>

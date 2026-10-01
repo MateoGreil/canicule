@@ -41,8 +41,8 @@ test('color, opacity, basemap and geolocation stay usable', async ({ page, conte
   await purpleTile
   await page.getByLabel(/^Opacity/).fill('0.5')
   await expect(page.getByLabel(/^Opacity/)).toHaveValue('0.5')
-  await page.getByRole('button', { name: 'Dark', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Dark', exact: true })).toHaveClass(/active/)
+  await page.getByRole('button', { name: 'Bright', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Bright', exact: true })).toHaveClass(/active/)
   await page.getByRole('button', { name: 'Locate me' }).click()
   await expect.poll(() => page.evaluate(() => location.hash)).toContain('/48.86/2.34/')
 })

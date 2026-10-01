@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte'
-  import { Map, NavigationControl, type StyleSpecification } from 'maplibre-gl'
+  import { Map, NavigationControl } from 'maplibre-gl'
   import { BASEMAPS, type BasemapId } from './lib/basemap'
   import { viewState } from './lib/state.svelte'
   import { FALLBACK_CONFIG, fetchConfig, showResolutionBadge, type AppConfig } from './lib/config'
@@ -46,19 +46,8 @@
     }, DEBOUNCE_MS)
   }
 
-  function basemapStyle(id: BasemapId): StyleSpecification {
-    return {
-      version: 8,
-      sources: {
-        basemap: {
-          type: 'raster',
-          tiles: BASEMAPS[id].urls,
-          tileSize: 256,
-          attribution: '© OpenStreetMap contributors © CARTO',
-        },
-      },
-      layers: [{ id: 'basemap', type: 'raster', source: 'basemap' }],
-    }
+  function basemapStyle(id: BasemapId): string {
+    return BASEMAPS[id].styleUrl
   }
 
   function switchBasemap(id: BasemapId) {
