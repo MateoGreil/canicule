@@ -5,7 +5,7 @@ export default defineConfig({
   use: {
     baseURL: 'http://127.0.0.1:15174',
     browserName: 'chromium',
-    channel: 'chrome',
+    channel: process.env.PLAYWRIGHT_CHANNEL || 'chrome',
     launchOptions: { args: ['--enable-webgl', '--use-gl=angle', '--use-angle=swiftshader'] },
   },
   webServer: {
