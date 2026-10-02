@@ -30,6 +30,39 @@ fn parses_the_three_cloudfront_cookies() {
     assert!(parse_set_cookies(&headers[..2]).is_none());
 }
 
+#[test]
+fn captures_and_forwards_the_strava_idcf_cookie_when_emitted() {
+    let headers = [
+        HeaderValue::from_static("CloudFront-Key-Pair-Id=K; Path=/"),
+        HeaderValue::from_static("CloudFront-Policy=P; Path=/"),
+        HeaderValue::from_static("CloudFront-Signature=S; Path=/"),
+        HeaderValue::from_static("_strava_idcf=jwt.value; Path=/; HttpOnly"),
+    ];
+    let cookies = parse_set_cookies(&headers).unwrap();
+    assert_eq!(cookies.idcf.as_deref(), Some("jwt.value"));
+    assert_eq!(
+        cookies.cookie_header(),
+        "CloudFront-Key-Pair-Id=K; CloudFront-Policy=P; CloudFront-Signature=S; _strava_idcf=jwt.value"
+    );
+}
+
+#[test]
+fn omits_the_idcf_cookie_when_the_exchange_does_not_emit_it() {
+    let headers = [
+        HeaderValue::from_static("CloudFront-Key-Pair-Id=K; Path=/"),
+        HeaderValue::from_static("CloudFront-Policy=P; Path=/"),
+        HeaderValue::from_static("CloudFront-Signature=S; Path=/"),
+    ];
+    let cookies = parse_set_cookies(&headers).unwrap();
+    assert_eq!(cookies.idcf, None);
+    let header = cookies.cookie_header();
+    assert_eq!(
+        header,
+        "CloudFront-Key-Pair-Id=K; CloudFront-Policy=P; CloudFront-Signature=S"
+    );
+    assert!(!header.ends_with("; "));
+}
+
 #[tokio::test]
 async fn fetches_cookies_once_and_reuses_them() {
     let server = MockServer::start().await;

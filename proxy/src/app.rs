@@ -179,7 +179,8 @@ async fn get_tile(
         )
     };
     let mut response = fetch_tile(&state.http, &url, cookie_header.as_deref()).await;
-    if matches!(&response, Ok(res) if res.status() == StatusCode::FORBIDDEN)
+    if matches!(&response, Ok(res)
+            if [StatusCode::FORBIDDEN, StatusCode::UNAUTHORIZED].contains(&res.status()))
         && let (Some(manager), Some(used_header)) = (&state.cookies, &cookie_header)
     {
         match manager.refresh_after(used_header).await {

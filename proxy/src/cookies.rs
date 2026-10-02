@@ -12,14 +12,20 @@ pub struct CloudFrontCookies {
     pub key_pair_id: String,
     pub policy: String,
     pub signature: String,
+    pub idcf: Option<String>,
 }
 
 impl CloudFrontCookies {
     pub fn cookie_header(&self) -> String {
-        format!(
+        let mut header = format!(
             "CloudFront-Key-Pair-Id={}; CloudFront-Policy={}; CloudFront-Signature={}",
             self.key_pair_id, self.policy, self.signature
-        )
+        );
+        if let Some(idcf) = &self.idcf {
+            header.push_str("; _strava_idcf=");
+            header.push_str(idcf);
+        }
+        header
     }
 }
 
@@ -27,6 +33,7 @@ pub fn parse_set_cookies(headers: &[HeaderValue]) -> Option<CloudFrontCookies> {
     let mut key_pair_id = None;
     let mut policy = None;
     let mut signature = None;
+    let mut idcf = None;
     for header in headers {
         let (name, rest) = header.to_str().ok()?.split_once('=')?;
         let value = rest.split(';').next()?.to_owned();
@@ -34,6 +41,7 @@ pub fn parse_set_cookies(headers: &[HeaderValue]) -> Option<CloudFrontCookies> {
             "CloudFront-Key-Pair-Id" => key_pair_id = Some(value),
             "CloudFront-Policy" => policy = Some(value),
             "CloudFront-Signature" => signature = Some(value),
+            "_strava_idcf" => idcf = Some(value),
             _ => {}
         }
     }
@@ -41,6 +49,7 @@ pub fn parse_set_cookies(headers: &[HeaderValue]) -> Option<CloudFrontCookies> {
         key_pair_id: key_pair_id?,
         policy: policy?,
         signature: signature?,
+        idcf,
     })
 }
 

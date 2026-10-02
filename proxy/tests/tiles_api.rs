@@ -166,6 +166,84 @@ async fn reauthenticates_after_an_upstream_403() {
 }
 
 #[tokio::test]
+async fn reauthenticates_after_an_upstream_401_when_the_idcf_cookie_is_missing() {
+    let upstream = MockServer::start().await;
+    let refresh_count = Arc::new(AtomicUsize::new(0));
+    let count = Arc::clone(&refresh_count);
+    Mock::given(path("/refresh"))
+        .respond_with(move |_: &Request| {
+            let n = count.fetch_add(1, Ordering::SeqCst);
+            let mut response = ResponseTemplate::new(200)
+                .append_header("Set-Cookie", "CloudFront-Key-Pair-Id=K; Path=/")
+                .append_header("Set-Cookie", "CloudFront-Policy=P; Path=/")
+                .append_header("Set-Cookie", format!("CloudFront-Signature=S{n}; Path=/"));
+            if n > 0 {
+                response =
+                    response.append_header("Set-Cookie", "_strava_idcf=idcf-test-jwt; Path=/");
+            }
+            response
+        })
+        .expect(2)
+        .mount(&upstream)
+        .await;
+    Mock::given(path("/identified/globalheat/all/hot/6/32/21.png"))
+        .respond_with(|request: &Request| {
+            if request
+                .headers
+                .get("cookie")
+                .is_some_and(|value| value.to_str().unwrap().contains("_strava_idcf="))
+            {
+                ResponseTemplate::new(200).set_body_bytes(TILE)
+            } else {
+                ResponseTemplate::new(401)
+            }
+        })
+        .expect(2)
+        .mount(&upstream)
+        .await;
+    let url = serve(state(&upstream, true, 14, None)).await;
+    let response = reqwest::get(format!("{url}{TILE_PATH}")).await.unwrap();
+    assert_eq!(response.status(), 200);
+    upstream.verify().await;
+}
+
+#[tokio::test]
+async fn forwards_the_strava_idcf_cookie_on_authenticated_tile_requests() {
+    let upstream = MockServer::start().await;
+    Mock::given(path("/refresh"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .append_header("Set-Cookie", "CloudFront-Key-Pair-Id=K; Path=/")
+                .append_header("Set-Cookie", "CloudFront-Policy=P; Path=/")
+                .append_header("Set-Cookie", "CloudFront-Signature=S; Path=/")
+                .append_header("Set-Cookie", "_strava_idcf=idcf-test-jwt; Path=/"),
+        )
+        .expect(1)
+        .mount(&upstream)
+        .await;
+    Mock::given(path("/identified/globalheat/all/hot/6/32/21.png"))
+        .respond_with(ResponseTemplate::new(200).set_body_bytes(TILE))
+        .expect(1)
+        .mount(&upstream)
+        .await;
+    let url = serve(state(&upstream, true, 14, None)).await;
+    let response = reqwest::get(format!("{url}{TILE_PATH}")).await.unwrap();
+    assert_eq!(response.status(), 200);
+    let tile_request = upstream
+        .received_requests()
+        .await
+        .unwrap()
+        .into_iter()
+        .find(|request| request.url.path().starts_with("/identified"))
+        .unwrap();
+    assert_eq!(
+        tile_request.headers["cookie"],
+        "CloudFront-Key-Pair-Id=K; CloudFront-Policy=P; CloudFront-Signature=S; _strava_idcf=idcf-test-jwt"
+    );
+    upstream.verify().await;
+}
+
+#[tokio::test]
 async fn fails_cleanly_when_cookie_refresh_fails() {
     let upstream = MockServer::start().await;
     Mock::given(path("/refresh"))
