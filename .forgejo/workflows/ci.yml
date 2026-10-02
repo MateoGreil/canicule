@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+    container:
+      image: rust:1
+    steps:
+      - name: Clone (JS actions need Node, absent from the Rust image)
+        run: git clone --depth 1 --branch "${{ github.head_ref || github.ref_name }}" "${{ github.server_url }}/${{ github.repository }}" .
+      - run: rustup component add rustfmt clippy
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test -p canicule
+
+  frontend:
+    runs-on: ubuntu-latest
+    container:
+      image: node:22
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - run: npm run build
